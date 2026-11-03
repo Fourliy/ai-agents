@@ -13,12 +13,9 @@ class Llm:
             timeout=60,
         )
 
-    async def complete(self, text: str) -> str:
+    async def complete(self, messages: list[dict[str, str]]) -> str:
         response = await self._client.chat.completions.create(
             model=self._model,
-            messages=[
-                {"role": "system", "content": self._prompt},
-                {"role": "user", "content": text},
-            ],
+            messages=[{"role": "system", "content": self._prompt}, *messages],
         )
         return response.choices[0].message.content or ""
