@@ -1,7 +1,10 @@
+import logging
 import os
 from pathlib import Path
 
 from dotenv import load_dotenv
+
+logger = logging.getLogger(__name__)
 
 
 class Config:
@@ -15,5 +18,6 @@ class Config:
     def _required(self, name: str) -> str:
         value = os.environ.get(name, "").strip()
         if not value:
+            logger.info("Не задана переменная %s", name)
             raise SystemExit(f"Не задана переменная {name}")
         return value
