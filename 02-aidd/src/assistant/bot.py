@@ -11,6 +11,23 @@ from assistant.llm import Llm
 
 logger = logging.getLogger(__name__)
 
+_TELEGRAM_LIMIT = 4096
+
+
+def _parts(text: str) -> list[str]:
+    parts: list[str] = []
+    rest = text
+    while rest:
+        if len(rest) <= _TELEGRAM_LIMIT:
+            parts.append(rest)
+            break
+        cut = rest.rfind("\n", 0, _TELEGRAM_LIMIT)
+        if cut <= 0:
+            cut = _TELEGRAM_LIMIT
+        parts.append(rest[:cut])
+        rest = rest[cut:].lstrip("\n")
+    return parts
+
 
 class Bot:
     def __init__(self, config: Config, history: History, llm: Llm) -> None:
@@ -39,7 +56,8 @@ class Bot:
             await message.answer("Не удалось получить ответ.")
             return
         self._history.add(chat_id, "assistant", answer)
-        await message.answer(answer)
+        for part in _parts(answer):
+            await message.answer(part)
 
     async def _on_other(self, message: Message) -> None:
         logger.info("Чат %s, сообщение пропущено", message.chat.id)
